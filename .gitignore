@@ -1,0 +1,41 @@
+# Django / Python
+*.log
+*.pot
+*.pyc
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+*.egg
+*.sqlite3          # local database - never commit real data!
+media/             # user uploaded files
+staticfiles/       # collected static files
+
+# Virtual environments
+venv/
+.env/
+env/
+.venv/
+
+# IDE / editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# macOS / Windows junk
+.DS_Store
+Thumbs.db
+
+# Logs & temp
+*.bak
+*.tmp
+
+# Deployment extras (add later if needed)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local

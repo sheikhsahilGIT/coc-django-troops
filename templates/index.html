@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Clash of Clans Troops - Django</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background: #0d0d0d; color: #fff; font-family: Arial, sans-serif; }
+        .card { background: #1a1a1a; border: 3px solid #ffcc00; transition: all 0.3s; }
+        .card:hover { transform: scale(1.05); border-color: #ff6600; box-shadow: 0 0 20px #ff6600; }
+        .header { background: linear-gradient(90deg, #cc0000, #ff6600); padding: 20px; text-align: center; }
+        .troop-img { height: 200px; object-fit: cover; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1 class="display-4 fw-bold">⚔️ CLASH OF CLANS TROOPS ⚔️</h1>
+    </div>
+
+    <div class="container mt-4">
+        <div class="row mb-4">
+            <div class="col-md-6 mx-auto">
+                <input type="text" id="searchInput" class="form-control form-control-lg" placeholder="Search troop name..." onkeyup="filterTroops()">
+            </div>
+        </div>
+
+        <div class="row" id="troopCards">
+            {% for troop in troops %}
+            <div class="col-md-4 mb-4 troop-card">
+                <div class="card h-100 text-center" onclick="showDetail('{{ troop.name }}', '{{ troop.detail|escapejs }}', '{{ troop.image }}')">
+                    <img src="{{ troop.image }}" class="card-img-top troop-img" alt="{{ troop.name }}">
+                    <div class="card-body">
+                        <h4 class="card-title text-warning">{{ troop.name }}</h4>
+                        <p class="card-text">{{ troop.desc }}</p>
+                        <p><strong>Housing:</strong> {{ troop.housing }} &nbsp;|&nbsp; <strong>Elixir:</strong> {{ troop.elixir }}</p>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Modal for details -->
+    <div class="modal fade" id="detailModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content bg-dark text-white">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle"></h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <img id="modalImage" class="img-fluid rounded mb-3" style="max-height: 300px;">
+                    <p id="modalDetail"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-warning" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function showDetail(name, detail, image) {
+            document.getElementById('modalTitle').textContent = name;
+            document.getElementById('modalDetail').textContent = detail;
+            document.getElementById('modalImage').src = image;
+            new bootstrap.Modal(document.getElementById('detailModal')).show();
+        }
+
+        function filterTroops() {
+            const input = document.getElementById('searchInput').value.toLowerCase();
+            const cards = document.querySelectorAll('.troop-card');
+            cards.forEach(card => {
+                const title = card.querySelector('.card-title').textContent.toLowerCase();
+                card.style.display = title.includes(input) ? 'block' : 'none';
+            });
+        }
+    </script>
+</body>
+</html>
