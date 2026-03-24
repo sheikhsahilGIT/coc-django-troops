@@ -1,60 +1,229 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Clash of Clans Troops - Django</title>
+    <title>Clash of Clans — Troops, Heroes &amp; Pets</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body { background: #0d0d0d; color: #fff; font-family: Arial, sans-serif; }
-        .card { background: #1a1a1a; border: 3px solid #ffcc00; transition: all 0.3s; }
-        .card:hover { transform: scale(1.05); border-color: #ff6600; box-shadow: 0 0 20px #ff6600; }
-        .header { background: linear-gradient(90deg, #cc0000, #ff6600); padding: 20px; text-align: center; }
-        .troop-img { height: 200px; object-fit: cover; }
+        :root {
+            --coc-bg: #0f1419;
+            --coc-panel: #1a2332;
+            --coc-gold: #f4d35e;
+            --coc-ink: #e8eef7;
+            --coc-muted: #8b9bb4;
+            --coc-accent: #3b82f6;
+        }
+        body {
+            background: radial-gradient(ellipse 120% 80% at 50% -20%, #243652 0%, var(--coc-bg) 55%);
+            color: var(--coc-ink);
+            min-height: 100vh;
+            font-family: "Segoe UI", system-ui, sans-serif;
+        }
+        .hero-head {
+            border-bottom: 1px solid rgba(244, 211, 94, 0.25);
+            background: linear-gradient(180deg, rgba(26, 35, 50, 0.95), rgba(15, 20, 25, 0.6));
+        }
+        .brand-mark {
+            width: 52px;
+            height: 52px;
+            border-radius: 14px;
+            background: linear-gradient(145deg, #f4d35e, #c9a227);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            color: #1a1204;
+            font-size: 1.1rem;
+            box-shadow: 0 8px 28px rgba(244, 211, 94, 0.25);
+        }
+        .search-wrap {
+            max-width: 420px;
+        }
+        .search-wrap .form-control {
+            background: var(--coc-panel);
+            border: 1px solid rgba(139, 155, 180, 0.35);
+            color: var(--coc-ink);
+        }
+        .search-wrap .form-control:focus {
+            border-color: var(--coc-gold);
+            box-shadow: 0 0 0 0.2rem rgba(244, 211, 94, 0.15);
+            background: #243146;
+            color: #fff;
+        }
+        .category-block {
+            margin-bottom: 3rem;
+        }
+        .category-title {
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: var(--coc-gold);
+            letter-spacing: 0.03em;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+        .category-title span.badge {
+            font-weight: 600;
+            background: rgba(59, 130, 246, 0.25) !important;
+            color: #bfdbfe;
+            border: 1px solid rgba(147, 197, 253, 0.3);
+        }
+        .unit-card {
+            background: var(--coc-panel);
+            border: 1px solid rgba(139, 155, 180, 0.2);
+            border-radius: 16px;
+            overflow: hidden;
+            transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s;
+            height: 100%;
+            cursor: pointer;
+        }
+        .unit-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(244, 211, 94, 0.45);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+        }
+        .unit-card .thumb {
+            background: linear-gradient(180deg, #243652, #1a2332);
+            padding: 1rem;
+            text-align: center;
+            min-height: 140px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .unit-card .thumb img {
+            max-height: 110px;
+            width: auto;
+            max-width: 100%;
+            object-fit: contain;
+            filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.45));
+        }
+        .unit-card .body {
+            padding: 1rem 1.1rem 1.15rem;
+        }
+        .unit-name {
+            font-size: 1.05rem;
+            font-weight: 700;
+            margin-bottom: 0.35rem;
+            color: #fff;
+        }
+        .unit-meta {
+            font-size: 0.82rem;
+            color: var(--coc-muted);
+            line-height: 1.45;
+        }
+        .pill-elixir { background: #15803d !important; }
+        .pill-dark { background: #6b21a8 !important; }
+        .pill-gold { background: #b45309 !important; }
+        .pill-bh { background: #0e7490 !important; }
+        .pill-neutral { background: #475569 !important; }
+        .stat-row strong { color: #cbd5e1; }
+        footer {
+            color: var(--coc-muted);
+            font-size: 0.85rem;
+        }
+        .unit-card.hidden-search { display: none !important; }
+        .category-block.hidden-search { display: none !important; }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1 class="display-4 fw-bold">⚔️ CLASH OF CLANS TROOPS ⚔️</h1>
-    </div>
-
-    <div class="container mt-4">
-        <div class="row mb-4">
-            <div class="col-md-6 mx-auto">
-                <input type="text" id="searchInput" class="form-control form-control-lg" placeholder="Search troop name..." onkeyup="filterTroops()">
-            </div>
-        </div>
-
-        <div class="row" id="troopCards">
-            {% for troop in troops %}
-            <div class="col-md-4 mb-4 troop-card">
-                <div class="card h-100 text-center" onclick="showDetail('{{ troop.name }}', '{{ troop.detail|escapejs }}', '{{ troop.image }}')">
-                    <img src="{{ troop.image }}" class="card-img-top troop-img" alt="{{ troop.name }}">
-                    <div class="card-body">
-                        <h4 class="card-title text-warning">{{ troop.name }}</h4>
-                        <p class="card-text">{{ troop.desc }}</p>
-                        <p><strong>Housing:</strong> {{ troop.housing }} &nbsp;|&nbsp; <strong>Elixir:</strong> {{ troop.elixir }}</p>
+    <header class="hero-head py-4 mb-4 sticky-top opacity-100">
+        <div class="container">
+            <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="brand-mark">CoC</div>
+                    <div>
+                        <h1 class="h3 mb-1 text-white fw-bold">Troop &amp; Hero Compendium</h1>
+                        <p class="mb-0 text-secondary small">Home Village roster, Super Troops, siege, heroes, pets, and Builder Base — {{ unit_count }} entries.</p>
                     </div>
                 </div>
+                <div class="search-wrap w-100 w-md-auto">
+                    <label class="visually-hidden" for="unit-search">Search units</label>
+                    <input type="search" id="unit-search" class="form-control form-control-lg" placeholder="Search by name or description…" autocomplete="off">
+                </div>
             </div>
-            {% endfor %}
         </div>
-    </div>
+    </header>
 
-    <!-- Modal for details -->
-    <div class="modal fade" id="detailModal" tabindex="-1">
+    <main class="container pb-5">
+        {% for category, units in grouped_units.items %}
+            {% if units %}
+            <section class="category-block" data-category="{{ category|escape }}">
+                <h2 class="category-title">
+                    {{ category }}
+                    <span class="badge rounded-pill">{{ units|length }}</span>
+                </h2>
+                <div class="row g-3">
+                    {% for u in units %}
+                    <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
+                        <article class="unit-card"
+                                 data-name="{{ u.name|lower }}"
+                                 data-detail="{{ u.detail|lower }}"
+                                 data-category="{{ category|lower }}"
+                                 data-unit-name="{{ u.name|escape }}"
+                                 data-unit-cat="{{ u.category|escape }}"
+                                 data-unit-detail="{{ u.detail|escape }}"
+                                 data-unit-image="{{ u.image|escape }}"
+                                 data-unit-housing="{{ u.housing }}"
+                                 data-unit-cost="{{ u.cost }}"
+                                 data-unit-resource="{{ u.resource|escape }}">
+                            <div class="thumb">
+                                <img src="{{ u.image }}" alt="{{ u.name }}" loading="lazy"
+                                     onerror="this.onerror=null;this.src='https://placehold.co/120x120/1a2332/f4d35e?text=CoC&font=montserrat';">
+                            </div>
+                            <div class="body">
+                                <div class="unit-name">{{ u.name }}</div>
+                                <div class="mb-2">
+                                    {% if u.resource == "Elixir" %}
+                                        <span class="badge pill-elixir">Elixir</span>
+                                    {% elif u.resource == "Dark" %}
+                                        <span class="badge pill-dark">Dark Elixir</span>
+                                    {% elif u.resource == "Gold" %}
+                                        <span class="badge pill-gold">Gold</span>
+                                    {% elif u.resource == "BH" %}
+                                        <span class="badge pill-bh">Builder</span>
+                                    {% else %}
+                                        <span class="badge pill-neutral">—</span>
+                                    {% endif %}
+                                </div>
+                                <div class="unit-meta stat-row">
+                                    {% if u.housing == "—" %}
+                                        <div><strong>Role</strong> · {{ u.category }}</div>
+                                    {% else %}
+                                        <div><strong>Housing</strong> · {{ u.housing }}</div>
+                                        <div><strong>Train cost</strong> · {{ u.cost }} {{ u.resource }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </article>
+                    </div>
+                    {% endfor %}
+                </div>
+            </section>
+            {% endif %}
+        {% endfor %}
+    </main>
+
+    <footer class="text-center pb-4">
+        Fan-made overview · Art via&nbsp;<a href="https://coc.guide" class="link-info" target="_blank" rel="noopener">coc.guide</a>
+        &nbsp;(game data). Not affiliated with Supercell.
+    </footer>
+
+    <!-- Detail modal -->
+    <div class="modal fade" id="detailModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content bg-dark text-white">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modalTitle"></h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            <div class="modal-content bg-dark text-light border-secondary">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title" id="detailModalTitle"></h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body text-center">
-                    <img id="modalImage" class="img-fluid rounded mb-3" style="max-height: 300px;">
-                    <p id="modalDetail"></p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-warning" data-bs-dismiss="modal">Close</button>
+                    <img id="detailModalImg" src="" alt="" class="img-fluid mb-3" style="max-height: 180px;">
+                    <p class="text-secondary small mb-1" id="detailModalCat"></p>
+                    <p id="detailModalBody" class="mb-0"></p>
+                    <p class="small text-secondary mt-3 mb-0" id="detailModalStats"></p>
                 </div>
             </div>
         </div>
@@ -62,21 +231,53 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        function showDetail(name, detail, image) {
-            document.getElementById('modalTitle').textContent = name;
-            document.getElementById('modalDetail').textContent = detail;
-            document.getElementById('modalImage').src = image;
-            new bootstrap.Modal(document.getElementById('detailModal')).show();
-        }
+    (function () {
+        const input = document.getElementById('unit-search');
+        const sections = document.querySelectorAll('.category-block');
 
-        function filterTroops() {
-            const input = document.getElementById('searchInput').value.toLowerCase();
-            const cards = document.querySelectorAll('.troop-card');
-            cards.forEach(card => {
-                const title = card.querySelector('.card-title').textContent.toLowerCase();
-                card.style.display = title.includes(input) ? 'block' : 'none';
+        function normalize(s) { return (s || '').trim().toLowerCase(); }
+
+        function applyFilter() {
+            const q = normalize(input.value);
+            sections.forEach(section => {
+                let visible = 0;
+                section.querySelectorAll('.unit-card').forEach(card => {
+                    const name = card.dataset.name || '';
+                    const detail = card.dataset.detail || '';
+                    const cat = card.dataset.category || '';
+                    const match = !q || name.includes(q) || detail.includes(q) || cat.includes(q);
+                    card.classList.toggle('hidden-search', !match);
+                    if (match) visible++;
+                });
+                section.classList.toggle('hidden-search', visible === 0);
             });
         }
+
+        input.addEventListener('input', applyFilter);
+        input.addEventListener('search', applyFilter);
+
+        const modalEl = document.getElementById('detailModal');
+        const detailModal = new bootstrap.Modal(modalEl);
+        document.querySelectorAll('.unit-card').forEach(function (card) {
+            card.addEventListener('click', function () {
+                const ds = card.dataset;
+                document.getElementById('detailModalTitle').textContent = ds.unitName || '';
+                document.getElementById('detailModalCat').textContent = ds.unitCat || '';
+                document.getElementById('detailModalBody').textContent = ds.unitDetail || '';
+                const img = document.getElementById('detailModalImg');
+                img.src = ds.unitImage || '';
+                img.alt = ds.unitName || '';
+                const statsEl = document.getElementById('detailModalStats');
+                const h = ds.unitHousing || '';
+                if (h === '—') {
+                    statsEl.textContent = 'Hero, pet, or special unit — no army housing / train cost like regular troops.';
+                } else {
+                    statsEl.textContent = 'Housing space: ' + h + ' · Cost: ' + ds.unitCost + ' ' + (ds.unitResource || '');
+                }
+                detailModal.show();
+            });
+        });
+    })();
     </script>
 </body>
 </html>
