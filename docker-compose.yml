@@ -5,7 +5,13 @@ services:
       - "8000:8000"
     volumes:
       - .:/app
-    command: sh -c "python manage.py migrate --noinput && python manage.py runserver 0.0.0.0:8000 --noreload"
+    # Server must bind 0.0.0.0 in Docker; use http://localhost:8000 in your browser on Windows/Mac.
+    command: >-
+      sh -c "echo '' &&
+      echo '>>> Open in your browser: http://localhost:8000' &&
+      echo '' &&
+      python manage.py migrate --noinput &&
+      python manage.py runserver 0.0.0.0:8000 --noreload"
     environment:
       - DEBUG=True
     stdin_open: true

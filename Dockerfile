@@ -17,4 +17,5 @@ COPY . .
 
 EXPOSE 8000
 
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+# 0.0.0.0 is required in Docker so port publishing works; browse http://localhost:8000 on the host.
+CMD sh -c "echo '' && echo '  >>> Open in browser: http://localhost:8000' && echo '' && python manage.py runserver 0.0.0.0:8000"
